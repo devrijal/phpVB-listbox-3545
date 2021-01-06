@@ -6,13 +6,6 @@
       <option v-for="child in row.children" :value="child.id">{{row.kode}}.{{child.kode}} - {{child.nama}}</option>
     </optgroup>
   </select>
-
-<!--  <b-form-select v-model="selected" class="mb-3">-->
-<!--    <b-form-select-option :value="null">&#45;&#45; Please select an option &#45;&#45;</b-form-select-option>-->
-<!--    <b-form-select-option-group v-for="row in options" :label="`${row.kode} - ${row.nama}`">-->
-<!--      <b-form-select-option v-for="child in row.children" :value="child.id">{{child.nama}}</b-form-select-option>-->
-<!--    </b-form-select-option-group>-->
-<!--  </b-form-select>-->
 </template>
 
 <script>
