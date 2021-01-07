@@ -4,12 +4,17 @@
     <div class="row">
       <div :class="colClass">
         <div class="row">
-          <div class="col-md-9" @click="toggleList">
-            <input class="form-control pointer" type="text" v-model="selectedRow" disabled
-                   v-b-tooltip.hover :title="selectedRow">
+          <div class="col-md-auto">
+            <span @click="toggleList" class="pointer">
+              {{label}} <i :class="{'fa fa-caret-down': !listToggle, 'fa fa-caret-up': listToggle}"></i></span>
           </div>
-          <div class="col-md-3" v-if="selected">
-            <button type="button" class="btn btn-danger btn-sm btn-block" @click="selected=null">Reset</button>
+        </div>
+        <div class="row">
+          <div class="col-md-auto">
+            <span v-for="(item, index) in selected" class="badge badge-info badge-pill" v-b-tooltip.hover
+                  :title="item.nama" v-if="selected.length > 0">
+              {{selectedTitle(item)}} <i class="fa fa-close pointer" @click="remove(item, index)"></i></span>
+            <span v-else @click="toggleList"> -- Click to select option -- </span>
           </div>
         </div>
 
@@ -24,28 +29,28 @@
             <li class="dd-item" v-if="options.length > 0" v-for="(row, i) in options"
                 :class="{'dd-collapsed': !expanded.includes(row.id)}">
               <button :class="expanded.includes(row.id) ? 'dd-collapse' : 'dd-expand'" type="button"
-                      @click="toggle(row.id)">
+                      @click="toggle(row.id, i)">
                 {{ expanded.includes(row.id) ? 'Expand' : 'Collapse' }}</button>
-              <div class="dd-handle" v-b-tooltip.hover.right :title="`${row.kode} - ${row.nama}`" @click="select(row.id)">
+              <div class="dd-handle" v-b-tooltip.hover.right :title="`${row.kode} - ${row.nama}`" @click="select(row)">
                 {{row.kode}} - {{row.nama | title}}
                 <div class="nested-links">
-                  <span class="badge" v-if="selected === row.id"><i class="fa fa-check" style="color:green"></i></span>
+                  <span class="badge" v-if="selected.findIndex(item => item.id===row.id) > -1"><i class="fa fa-check" style="color:green"></i></span>
                   <span class="badge">{{row.children_count}}</span>
                 </div>
               </div>
 
               <ol class="dd-list" v-if="row.hasOwnProperty('children') && row.children.length > 0"
-                  v-for="(child, i) in row.children">
+                  v-for="(child, p2i) in row.children">
 
                 <li class="dd-item dd-collapsed" data-id="5">
                   <!--              <button :class="expanded.includes(child.id) ? 'dd-collapse' : 'dd-expand'" type="button"-->
-                  <!--                      @click="toggle(row.id, child.id)">-->
+                  <!--                      @click="toggle(child.id, [i, p2i])">-->
                   <!--                {{ expanded.includes(child.id) ? 'Expand' : 'Collapse' }}</button>-->
                   <div class="dd-handle" v-b-tooltip.hover.right :title="`${row.kode}.${child.kode} - ${child.nama}`"
-                       @click="select(row.id, child.id)">
+                       @click="select(child)">
                     {{row.kode}}.{{child.kode}} - {{child.nama | title}}
                     <div class="nested-links">
-                  <span class="badge" v-if="selected === child.id">
+                  <span class="badge" v-if="selected.findIndex(item => item.id===child.id) > -1">
                     <i class="fa fa-check" style="color:green"></i></span>
                       <span class="badge">{{child.children_count}}</span>
                     </div>
@@ -84,12 +89,16 @@ module.exports = {
       default: 'col-md-12'
     },
     value: {
-      type: Number,
+      type: Array,
       default: null
+    },
+    label: {
+      type : String,
+      default: 'Kementerian'
     }
   },
   methods: {
-    getData(id=this.presetKlId) {
+    getData(id=this.presetKlId, index=0) {
       const url = `${this.getUrl}/${this.cmd}/${id}`;
 
       axios.get(url)
@@ -98,10 +107,12 @@ module.exports = {
               if (id === this.presetKlId) {
                 this.options = resp.data;
               } else {
-                const index = this.options.findIndex(row => row.id === id)
-                this.$set(this.options[index], 'children', resp.data);
+                if (!Array.isArray(index)) {
+                  this.$set(this.options[index], 'children', resp.data);
+                } else {
+                  this.$set(this.options[index[0]].children[index[1]], 'children', resp.data);
+                }
                 this.expanded.push(id)
-                // this.options[index].children = resp.data;
               }
             } else {
               eventBus.$emit('openNotif', resp.data);
@@ -109,9 +120,8 @@ module.exports = {
           })
           .catch(e => console.log(e))
     },
-    toggle(id, child_id=0) {
-      if (!child_id) {
-        const index = this.options.findIndex(row => row.id===id);
+    toggle(id, index) {
+      if (!Array.isArray(index)) {
         const row = this.options[index];
         if (row.hasOwnProperty('children') && Array.isArray(row.children)) {
           const expindex = this.expanded.indexOf(row.id);
@@ -121,13 +131,11 @@ module.exports = {
             this.expanded.push(row.id)
           }
         } else {
-          this.getData(id);
+          this.getData(id, index);
         }
 
       } else {
-        const index = this.options.findIndex(row => row.id===id);
-        const cindex = this.options[index].children.findIndex(child => child.id===child_id);
-        const row = this.options[index][cindex];
+        const row = this.options[index[0]].children[index[1]];
         if (row.hasOwnProperty('children') && Array.isArray(row.children)) {
           const expindex = this.expanded.indexOf(row.id);
           if (expindex > -1) {
@@ -136,26 +144,47 @@ module.exports = {
             this.expanded.push(row.id)
           }
         } else {
-          this.getData(child_id);
+          this.getData(id, index);
         }
       }
     },
     toggleList() {
+      this.listToggle =!this.listToggle;
       this.$root.$emit('bv::toggle::collapse', 'collapse-lbk')
     },
-    select(id, child_id=0) {
-      if(!child_id) {
-        this.selectedData = id;
-        this.selected = id;
+    select(item) {
+      const index = this.selected.findIndex(row => item.id===row.id);
+
+      if (index > -1) {
+        const notification = {
+          "class" : "warning",
+          "callback":"infoSnackbar",
+          "notification": "Item already selected"
+        }
+        eventBus.$emit('openNotif', notification);
       } else {
-        this.selectedData = [id, child_id];
-        this.selected = child_id;
+        this.selected.push(item)
       }
+    },
+    remove(item, index) {
+      this.selected.splice(index, 1)
+    },
+    selectedTitle(item) {
+      let title;
+      if (parseInt(item.parent_id) !== this.presetKlId) {
+        const p1_index = this.options.findIndex(row => row.id===item.parent_id)
+        const p1 = this.options[p1_index]
+        title = `${p1.kode}.${item.kode} - ${item.nama}`
+
+      } else {
+        title = `${item.kode} - ${item.nama}`;
+      }
+      return title.substring(0, 20) + "...";
     }
   },
   computed: {
     selectedRow() {
-      if (!this.selected) {
+      if (!this.selected || this.selected.length === 0) {
         return "-- Click to select options --";
       } else {
         if (Array.isArray(this.selectedData)) {
@@ -177,14 +206,15 @@ module.exports = {
     return {
       options: [],
       expanded: [],
-      selected: null,
-      selectedData: null
+      selected: [],
+      selectedData: null,
+      listToggle: false
     }
   },
   filters: {
     title(string) {
-      if(string.length > 64) {
-        return string.substring(0, 64) + '...';
+      if(string.length > 63) {
+        return string.substring(0, 63) + '...';
       }
       return string;
     }
@@ -194,7 +224,11 @@ module.exports = {
   },
   watch: {
     selected() {
-      this.$emit('input', parseInt(this.selected));
+      let list = []
+      this.selected.forEach(item => {
+        list.push(item.id);
+      });
+      this.$emit('input', list);
     }
   }
 }
@@ -206,5 +240,11 @@ module.exports = {
 }
 .pointer {
   cursor: pointer;
+}
+
+.badge-pill {
+  padding-right: .6em;
+  padding-left: .6em;
+  border-radius: 10rem;
 }
 </style>

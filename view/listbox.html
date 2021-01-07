@@ -1,7 +1,7 @@
 <h1>Type list select</h1>
 <div class="row">
     <div class="col-md-6">
-        <listbox-kementerian-select get-url="listbox" cmd="getRefSelect" :preset-kl-id="62" v-model="selected">
+        <listbox-kementerian-select get-url="listbox" cmd="getRefSelect" :preset-kl-id="kl_id" v-model="selectedSelect">
         </listbox-kementerian-select>
     </div>
 </div>
@@ -9,5 +9,5 @@
 <hr>
 
 <h1>Type list box</h1>
-<listbox-kementerian get-url="listbox" cmd="getRef" :preset-kl-id="62" col-class="col-md-6" v-model="selected">
+<listbox-kementerian get-url="listbox" cmd="getRef" :preset-kl-id="kl_id" col-class="col-md-6" v-model="selected">
 </listbox-kementerian>

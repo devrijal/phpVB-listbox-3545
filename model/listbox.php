@@ -14,6 +14,7 @@ class listbox extends \Gov2lib\crudHandler
     }
 
     function getRef($id) {
+        \DB::useDB('kl_bkn');
         $q = "SELECT id, parent_id, nama, children as children_count, kode, level_label  
                 FROM {$this->tbl->table} WHERE parent_id=%i";
         $result = [];
@@ -27,6 +28,7 @@ class listbox extends \Gov2lib\crudHandler
     }
 
     function getRefSelect($id) {
+        \DB::useDB('kl_bkn');
         $fields = "id, parent_id, nama, kode, level_label";
         $q = "SELECT {$fields}  
                 FROM {$this->tbl->table} WHERE parent_id=%i";

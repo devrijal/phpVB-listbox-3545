@@ -13,10 +13,12 @@ class listbox
 
     function index($vars)
     {
-        global $self, $doc;
+        global $self, $doc, $config;
         $self->gov2nav->setDefaultNavCustom();
         $doc->body("pageTitle", 'Listbox Kementerian | BKN');
         $GLOBALS['vueData']['selected'] = null;
+        $GLOBALS['vueData']['selectedSelect'] = null;
+        $GLOBALS['vueData']['kl_id'] = (int)$config->domain->attr['id'];
         $self->content();
     }
 
