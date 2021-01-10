@@ -47,7 +47,7 @@ module.exports = {
   data() {
     return {
       options: [],
-      selected: null
+      selected: this.value
     }
   },
   filters: {

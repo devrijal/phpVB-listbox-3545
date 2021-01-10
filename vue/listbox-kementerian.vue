@@ -175,11 +175,30 @@ module.exports = {
         const p1_index = this.options.findIndex(row => row.id===item.parent_id)
         const p1 = this.options[p1_index]
         title = `${p1.kode}.${item.kode} - ${item.nama}`
-
       } else {
         title = `${item.kode} - ${item.nama}`;
       }
       return title.substring(0, 20) + "...";
+    },
+    getSelectedValues() {
+      const data = {
+        cmd: 'getSelectedRef',
+        data: this.value
+      }
+      axios.post(this.getUrl, data)
+          .then(resp => {
+            let i = 0;
+            if (!resp.data.hasOwnProperty('class') && Array.isArray(resp.data)) {
+              resp.data.forEach(row => {
+                this.$set(this.selected, i, row);
+                i++;
+              })
+            } else {
+              console.log(resp);
+              eventBus.$emit('openNotif', resp.data);
+            }
+          })
+          .catch(e => console.log(e))
     }
   },
   computed: {
@@ -221,8 +240,29 @@ module.exports = {
   },
   created() {
     this.getData();
+    if(Array.isArray(this.value)) {
+      console.log('value is array')
+      if (this.selected.length === 0 && this.options.length === 0) {
+        this.getSelectedValues();
+      } else {
+        console.log('wrong condition')
+      }
+    } else {
+      console.log('value isnot an array')
+    }
   },
   watch: {
+    value() {
+      // console.log('value changed')
+      // if(Array.isArray(this.value)) {
+      //   console.log('value is array')
+      //   if (this.selected.length === 0 && this.options.length === 0) {
+      //     this.getSelectedValues();
+      //   }
+      // } else {
+      //   console.log('value isnot an array')
+      // }
+    },
     selected() {
       let list = []
       this.selected.forEach(item => {

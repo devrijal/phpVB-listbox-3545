@@ -16,8 +16,8 @@ class listbox
         global $self, $doc, $config;
         $self->gov2nav->setDefaultNavCustom();
         $doc->body("pageTitle", 'Listbox Kementerian | BKN');
-        $GLOBALS['vueData']['selected'] = null;
-        $GLOBALS['vueData']['selectedSelect'] = null;
+        $GLOBALS['vueData']['selected'] = [338, 2723, 2735];
+        $GLOBALS['vueData']['selectedSelect'] = 2723;
         $GLOBALS['vueData']['kl_id'] = (int)$config->domain->attr['id'];
         $self->content();
     }
@@ -25,6 +25,13 @@ class listbox
     function getRef($vars) {
         global $self, $doc;
         $data = $self->getRef($vars['id']);
+        return $doc->responseGet($data);
+    }
+
+    function getSelectedRef($vars) {
+        global $self, $doc;
+        $data = $vars['data'];
+        $data = $self->getSelectedRef($data);
         return $doc->responseGet($data);
     }
 
